@@ -1,7 +1,6 @@
 package news_recommend.news.issue;
 
-import news_recommend.news.issue.Issue;
-import news_recommend.news.issue.IssueService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

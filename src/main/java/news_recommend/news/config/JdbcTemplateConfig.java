@@ -1,6 +1,9 @@
 package news_recommend.news.config;
 
 
+import news_recommend.news.issue.IssueService;
+import news_recommend.news.issue.repository.IssueRepository;
+import news_recommend.news.issue.repository.jdbctemplate.JdbcTemplateIssueRepository;
 import news_recommend.news.member.MemberService;
 import news_recommend.news.member.repository.MemberRepository;
 import news_recommend.news.member.repository.jdbctemplate.JdbcTemplateMemberRepository;
@@ -27,13 +30,23 @@ public class JdbcTemplateConfig {
     }
 
     @Bean
-    public MemberRepository accountRepository() {
+    public MemberRepository memberRepository() {
         return new JdbcTemplateMemberRepository(dataSource);
     }
 
     @Bean
-    public MemberService accountService() {
-        return new MemberService(accountRepository());
+    public MemberService memberService() {
+        return new MemberService(memberRepository());
+    }
+
+    @Bean
+    public IssueRepository issueRepository() {
+        return new JdbcTemplateIssueRepository(dataSource);
+    }
+
+    @Bean
+    public IssueService issueService() {
+        return new IssueService(issueRepository());
     }
 
 }

@@ -2,19 +2,21 @@ package news_recommend.news.issue;
 
 import news_recommend.news.issue.repository.IssueRepository;
 
+
 import java.util.List;
 import java.util.Optional;
+
 
 public class IssueService {
 
     private final IssueRepository issueRepository;
-    public IssueService(final IssueRepository accountRepository){
-        this.issueRepository = accountRepository;
+    public IssueService(final IssueRepository issueRepository){
+        this.issueRepository = issueRepository;
     }
 
 
 
-    public List<Issue> findMembers() {
+    public List<Issue> findIssues() {
         return issueRepository.findAll();
     }
 
