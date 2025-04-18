@@ -14,8 +14,24 @@ public class MemberService {
 
 
 
-    List<Member> findMembers() {
+    public List<Member> findMembers() {
         return memberRepository.findAll();
+    }
+
+    public Member save(Member member) {
+        return memberRepository.save(member);
+    }
+
+    public Optional<Member> findById(Long id) {
+        return memberRepository.findById(id);
+    }
+
+    public int update(Member member) {
+        return memberRepository.update(member);
+    }
+
+    public int delete(Long id) {
+        return memberRepository.delete(id);
     }
 
 

@@ -25,15 +25,15 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
     }
 
 
-    @Override
-    public Member save(Member account) {
-        return null;
-    }
-
-    @Override
-    public Optional<Member> findById(Long id) {
-        return Optional.empty();
-    }
+//    @Override
+//    public Member save(Member account) {
+//        return null;
+//    }
+//
+//    @Override
+//    public Optional<Member> findById(Long id) {
+//        return Optional.empty();
+//    }
 
     @Override
     public List<Member> findAll() {
@@ -44,14 +44,52 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
     }
 
     @Override
-    public int update(Member account) {
-        return 0;
+    public Member save(Member member) {
+        String sql = "INSERT INTO member (name, email, interest_category) VALUES (?, ?, ?) RETURNING user_id";
+        Long userId = jdbcTemplate.queryForObject(sql, new Object[]{
+                member.getName(),
+                member.getEmail(),
+                member.getInterestCategory()
+        }, Long.class);
+
+        member.setUserId(userId);
+        return member;
+    }
+
+    @Override
+    public Optional<Member> findById(Long id) {
+        String sql = "SELECT * FROM member WHERE user_id = ?";
+        List<Member> result = jdbcTemplate.query(sql, rowMapper(), id);
+        return result.stream().findAny();
+    }
+
+    @Override
+    public int update(Member member) {
+        String sql = "UPDATE member SET name = ?, email = ?, interest_category = ? WHERE user_id = ?";
+        return jdbcTemplate.update(sql,
+                member.getName(),
+                member.getEmail(),
+                member.getInterestCategory(),
+                member.getUserId()
+        );
     }
 
     @Override
     public int delete(Long id) {
-        return 0;
+        String sql = "DELETE FROM member WHERE user_id = ?";
+        return jdbcTemplate.update(sql, id);
     }
+
+
+//    @Override
+//    public int update(Member account) {
+//        return 0;
+//    }
+//
+//    @Override
+//    public int delete(Long id) {
+//        return 0;
+//    }
 
     private RowMapper<Member> rowMapper() {
         return (rs, rowNum ) -> new Member(
