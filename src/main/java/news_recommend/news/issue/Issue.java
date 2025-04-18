@@ -41,11 +41,11 @@ public class Issue {
         return emotion;
     }
 
-    public void setIssueId(Long userId) {
+    public void setIssueId(Long issueId) {
         this.issueId = issueId;
     }
 
-    public void setIssueName(String IssueName) {
+    public void setIssueName(String issueName) {
         this.issueName = issueName;
     }
 

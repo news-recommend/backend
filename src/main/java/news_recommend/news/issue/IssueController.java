@@ -22,7 +22,8 @@ public class IssueController {
     }
 
     @PostMapping
-    public ResponseEntity<Issue> createIssue(@RequestBody news_recommend.news.issue.Issue issue) {
+    public ResponseEntity<Issue> createIssue(@RequestBody Issue issue) {
+
         return ResponseEntity.ok(issueService.save(issue));
     }
 

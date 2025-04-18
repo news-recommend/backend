@@ -36,11 +36,12 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
 
     @Override
     public Issue save(Issue issue) {
-        String sql = "INSERT INTO issue (issue_name, category, emotion) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO issue (issue_name, category, emotion) VALUES (?, ?, ?) RETURNING issue_id";
+        System.out.println(issue);
         Long issueId = jdbcTemplate.queryForObject(sql, new Object[]{
                 issue.getIssueName(),
                 issue.getCategory(),
-                issue.getIssueName()
+                issue.getEmotion()
         }, Long.class);
 
         issue.setIssueId(issueId);
