@@ -80,6 +80,27 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
         return jdbcTemplate.update(sql, id);
     }
 
+    @Override
+    public Member findMyProfile() {
+        // 이거 인증단에서 어떻게 jwt 토큰 다루는지 체크하고 변경해야함
+        String sql = "SELECT * FROM member WHERE user_id = 1";
+        return jdbcTemplate.queryForObject(sql, rowMapper());
+    }
+
+    @Override
+    public String findPasswordByUserId(Long userId) {
+        String sql = "SELECT password FROM member WHERE user_id = ?";
+        return jdbcTemplate.queryForObject(sql, String.class, userId);
+    }
+
+    @Override
+    public void updatePassword(Long userId, String newPassword) {
+        String sql = "UPDATE member SET password = ? WHERE user_id = ?";
+        jdbcTemplate.update(sql, newPassword, userId);
+    }
+
+
+
 
 //    @Override
 //    public int update(Member account) {
