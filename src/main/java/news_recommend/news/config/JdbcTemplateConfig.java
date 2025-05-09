@@ -1,6 +1,9 @@
 package news_recommend.news.config;
 
 
+import news_recommend.news.bookmark.BookmarkService;
+import news_recommend.news.bookmark.repository.BookmarkRepository;
+import news_recommend.news.bookmark.repository.jdbctemplate.JdbcTemplateBookmarkRepository;
 import news_recommend.news.issue.IssueService;
 import news_recommend.news.issue.repository.IssueRepository;
 import news_recommend.news.issue.repository.jdbctemplate.JdbcTemplateIssueRepository;
@@ -49,4 +52,13 @@ public class JdbcTemplateConfig {
         return new IssueService(issueRepository());
     }
 
+    @Bean
+    public BookmarkRepository bookmarkRepository() {
+        return new JdbcTemplateBookmarkRepository(dataSource);
+    }
+
+    @Bean
+    public BookmarkService bookmarkService() {
+        return new BookmarkService(bookmarkRepository());
+    }
 }
