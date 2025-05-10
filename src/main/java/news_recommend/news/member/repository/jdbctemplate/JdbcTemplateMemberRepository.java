@@ -112,6 +112,21 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
 //        return 0;
 //    }
 
+    //이미 존재하는 이메일로 회원가입하려는 경우.
+    @Override
+    public boolean existsByEmail(String email) { // 추가
+        String sql = "SELECT COUNT(*) FROM member WHERE email = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
+        return count != null && count > 0;
+    }
+    @Override
+    public Optional<Member> findByEmail(String email) {
+        String sql = "SELECT * FROM member WHERE email = ?";
+        List<Member> result = jdbcTemplate.query(sql, rowMapper(), email);
+        return result.stream().findAny();
+    }
+
+
     private RowMapper<Member> rowMapper() {
         return (rs, rowNum ) -> new Member(
                 rs.getLong("user_id"),
