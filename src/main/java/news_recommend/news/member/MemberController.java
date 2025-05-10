@@ -1,6 +1,6 @@
 package news_recommend.news.member;
 
-import news_recommend.news.dto.SignupRequest;
+import news_recommend.news.member.dto.SignupRequest;
 import news_recommend.news.utils.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
