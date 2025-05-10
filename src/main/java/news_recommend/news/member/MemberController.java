@@ -1,5 +1,6 @@
 package news_recommend.news.member;
 
+import news_recommend.news.dto.SignupRequest;
 import news_recommend.news.utils.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/users")  // 경로 통일(충돌 해결)
 public class MemberController {
 
     private final MemberService memberService;
@@ -19,38 +20,31 @@ public class MemberController {
         this.memberService = memberService;
     }
 
+    //  회원가입 API
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> signup(@RequestBody SignupRequest request) {
+        try {
+            if (request.getPreferredTags() == null) {
+                request.setPreferredTags(List.of());
+            }
 
-//    @GetMapping
-//    public ResponseEntity<List<Member>> getMembers() {
-//        return ResponseEntity.ok(memberService.findMembers());
-//    }
-//
-//    @PostMapping
-//    public ResponseEntity<Member> createMember(@RequestBody Member member) {
-//        return ResponseEntity.ok(memberService.save(member));
-//    }
-//
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Member> getMember(@PathVariable Long id) {
-//        return memberService.findById(id)
-//                .map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
-//
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Member> updateMember(@PathVariable Long id, @RequestBody Member updatedMember) {
-//        updatedMember.setUserId(id);
-//        memberService.update(updatedMember);
-//        return ResponseEntity.ok(updatedMember);
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
-//        memberService.delete(id);
-//        return ResponseEntity.noContent().build();
-//    }
-    // 이 위에거는 그냥 다 참고용으로만 쓰는게 좋을듯?
+            memberService.signup(request);
 
+            Map<String, Object> result = new HashMap<>();
+            result.put("registered", true);
+
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.error(e.getMessage(), "validation")
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("알 수 없는 오류가 발생했습니다.", "server_error"));
+        }
+    }
+
+    // 내 프로필 조회
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Member>> getMyProfile() {
         try {
@@ -63,6 +57,7 @@ public class MemberController {
         }
     }
 
+    //  내 프로필 수정
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<Map<String, String>>> updateMyProfile(@RequestBody MemberUpdateRequest request) {
         try {
@@ -71,13 +66,9 @@ public class MemberController {
             result.put("message", "변경 성공");
             return ResponseEntity.ok(ApiResponse.success(result));
         } catch (IllegalArgumentException e) {
-            // 비밀번호 오류
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(), "password"));
         } catch (Exception e) {
-            // 기타 오류
             return ResponseEntity.badRequest().body(ApiResponse.error("입력 형식이 올바르지 않습니다.", "type"));
         }
     }
-
-
 }

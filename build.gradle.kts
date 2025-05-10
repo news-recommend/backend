@@ -24,9 +24,32 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jdbc:3.4.3")
 	testImplementation("org.springframework.boot:spring-boot-starter-jdbc")
 
+	// 기존 의존성들 -- 회원가입과 관련되어 의존성 추가
+	implementation("org.springframework.boot:spring-boot-starter-security")
+
+	implementation("org.springframework.security:spring-security-crypto")
+	// Lombok 추가
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+
+	// JPA 의존성 추가
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	// 롬복
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+
+	runtimeOnly("org.postgresql:postgresql")
+
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+
 	runtimeOnly("org.postgresql:postgresql")
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+
