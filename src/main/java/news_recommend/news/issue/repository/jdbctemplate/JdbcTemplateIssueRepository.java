@@ -72,7 +72,19 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
         return jdbcTemplate.update(sql, id);
     }
 
+    // 카테고리별 이슈 리스트 코드 추가
+    @Override
+    public List<Issue> findByCategory(String category, int limit, int offset) {
+        String sql = "SELECT * FROM issue WHERE category = ? LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, rowMapper(), category, limit, offset);
+    }
 
+    @Override
+    public int countByCategory(String category) {
+        String sql = "SELECT COUNT(*) FROM issue WHERE category = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, category);
+    }
+    // 카테고리별 이슈 리스트 코드 추가 끝
 
 
     private RowMapper<Issue> rowMapper() {
