@@ -47,5 +47,16 @@ public class IssueController {
         return ResponseEntity.noContent().build();
     }
 
+    // 카테고리별 이슈 리스트 코드 추가
+    @GetMapping("/category")
+    public ResponseEntity<?> getIssuesByCategory(
+            @RequestParam String category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(issueService.getIssuesByCategory(category, page, size));
+    }
+    // 카테고리별 이슈 리스트 코드 추가 끝
+
 
 }

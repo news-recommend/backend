@@ -16,4 +16,11 @@ public interface IssueRepository {
 
     int delete(final Long id);
 
+    // 카테고리별 이슈 리스트 코드 추가
+    List<Issue> findByCategory(String category, int limit, int offset);
+
+    int countByCategory(String category);
+    // 카테고리별 이슈 리스트 코드 추가 끝
+
+
 }
