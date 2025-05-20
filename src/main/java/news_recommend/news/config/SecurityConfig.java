@@ -20,8 +20,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/signup").permitAll() // 회원가입은 인증 없이 허용
                         .anyRequest().authenticated() // 그 외는 인증 필요
-                )
-                .httpBasic(Customizer.withDefaults()); // Basic 인증 (필요 시 로그인용)
+                );
+
         return http.build();
     }
 }
