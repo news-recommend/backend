@@ -1,5 +1,6 @@
 package news_recommend.news.member;
 
+import news_recommend.news.member.dto.LoginRequest;
 import news_recommend.news.member.dto.SignupRequest;
 import news_recommend.news.utils.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    public MemberController(final MemberService memberService){
+    public MemberController(final MemberService memberService) {
         this.memberService = memberService;
     }
 
@@ -69,6 +70,20 @@ public class MemberController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(), "password"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("입력 형식이 올바르지 않습니다.", "type"));
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody LoginRequest request) {
+        try {
+            String token = memberService.login(request.getEmail(), request.getPassword());
+
+            Map<String, String> result = new HashMap<>();
+            result.put("token", token);
+
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(), "login_error"));
         }
     }
 }

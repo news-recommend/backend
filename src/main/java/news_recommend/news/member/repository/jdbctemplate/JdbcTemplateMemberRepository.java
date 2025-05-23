@@ -43,13 +43,14 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
         return memberList;
     }
 
-    @Override
+    @Override  // 비밀번호 추가
     public Member save(Member member) {
-        String sql = "INSERT INTO member (name, email, interest_category) VALUES (?, ?, ?) RETURNING user_id";
+        String sql = "INSERT INTO member (name, email, interest_category, password) VALUES (?, ?, ?, ?) RETURNING user_id";
         Long userId = jdbcTemplate.queryForObject(sql, new Object[]{
                 member.getName(),
                 member.getEmail(),
-                member.getInterestCategory()
+                member.getInterestCategory(),
+                member.getPassword()
         }, Long.class);
 
         member.setUserId(userId);
@@ -126,13 +127,14 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
         return result.stream().findAny();
     }
 
-
+// 비밀번호 추가
     private RowMapper<Member> rowMapper() {
         return (rs, rowNum ) -> new Member(
                 rs.getLong("user_id"),
                 rs.getString("name"),
                 rs.getString("email"),
-                rs.getString("interest_category")
+                rs.getString("interest_category"),
+                rs.getString("password")
         );
     }
 }

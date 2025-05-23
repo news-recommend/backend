@@ -1,7 +1,8 @@
 package news_recommend.news.member;
-
 import news_recommend.news.member.dto.SignupRequest;
 import news_recommend.news.member.repository.MemberRepository;
+import news_recommend.news.jwt.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,9 +14,13 @@ import org.springframework.stereotype.Service;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberService(final MemberRepository accountRepository){
+
+
+    public MemberService(final MemberRepository accountRepository, JwtTokenProvider jwtTokenProvider) {
         this.memberRepository = accountRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     // 전체 회원 조회
@@ -116,9 +121,38 @@ public class MemberService {
         Member member = new Member(
                 request.getName(),
                 request.getEmail(),
-                joinedTags
+                joinedTags,
+                request.getPassword()
         );
 
         save(member);
     }
+    // 로그인: 사용자가 이메일과 비밀번호로 로그인 요청을 보냄
+    public String login(String email, String password) {
+        Optional<Member> optional = memberRepository.findByEmail(email);
+
+        if (optional.isEmpty()) {
+            System.out.println("❌ 로그인 실패: 이메일 존재하지 않음");
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        }
+
+        Member member = optional.get();
+
+        // ✅ 여기서 확인 로그 출력
+        System.out.println("🔐 로그인 시도");
+        System.out.println("입력한 이메일: " + email);
+        System.out.println("입력한 비밀번호: " + password);
+        System.out.println("DB 저장 비밀번호: " + member.getPassword());
+
+        // 실제 서비스에서는 암호화된 비밀번호 비교 필요
+        if (!password.equals(member.getPassword())) {
+            System.out.println("❌ 로그인 실패: 비밀번호 불일치");
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // JWT 토큰 생성 및 반환
+        return jwtTokenProvider.createToken(member.getEmail());
+    }
+
+
 }
