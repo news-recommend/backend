@@ -4,7 +4,9 @@ import news_recommend.news.member.repository.MemberRepository;
 import news_recommend.news.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -128,7 +130,8 @@ public class MemberService {
         save(member);
     }
     // 로그인: 사용자가 이메일과 비밀번호로 로그인 요청을 보냄
-    public String login(String email, String password) {
+    // accessToken + refreshToken을 반환
+    public Map<String, String> loginWithTokens(String email, String password) {
         Optional<Member> optional = memberRepository.findByEmail(email);
 
         if (optional.isEmpty()) {
@@ -138,7 +141,7 @@ public class MemberService {
 
         Member member = optional.get();
 
-        // ✅ 여기서 확인 로그 출력
+        //  여기서 확인 로그 출력
         System.out.println("🔐 로그인 시도");
         System.out.println("입력한 이메일: " + email);
         System.out.println("입력한 비밀번호: " + password);
@@ -150,8 +153,14 @@ public class MemberService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        // JWT 토큰 생성 및 반환
-        return jwtTokenProvider.createToken(member.getEmail());
+        // 토큰 발급
+        String accessToken = jwtTokenProvider.createAccessToken(member.getUserId(), member.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getUserId(), member.getEmail());
+
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+        return tokens;
     }
 
 

@@ -1,28 +1,32 @@
 package news_recommend.news.config;
 
+import lombok.RequiredArgsConstructor;
+import news_recommend.news.jwt.JwtAuthenticationFilter;
+import news_recommend.news.jwt.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    public SecurityConfig() {
-        System.out.println("✅ SecurityConfig Loaded!");
-    }
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (개발용)
+        return http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/signup",
-                                "/api/users/login").permitAll() // 회원가입은 인증 없이 허용
-                        .anyRequest().authenticated() // 그 외는 인증 필요
+                        .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults()); // Basic 인증 (필요 시 로그인용)
-        return http.build();
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 }

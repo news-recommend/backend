@@ -4,6 +4,7 @@ import news_recommend.news.member.dto.LoginRequest;
 import news_recommend.news.member.dto.SignupRequest;
 import news_recommend.news.utils.ApiResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,12 +77,28 @@ public class MemberController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody LoginRequest request) {
         try {
-            String token = memberService.login(request.getEmail(), request.getPassword());
+            // 1. accessToken + refreshToken 반환하도록 서비스 수정 필요
+            Map<String, String> tokens = memberService.loginWithTokens(request.getEmail(), request.getPassword());
+            String accessToken = tokens.get("accessToken");
+            String refreshToken = tokens.get("refreshToken");
 
+            // 2. HttpOnly 쿠키 설정
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                    .httpOnly(true)
+                    .secure(false) // 운영환경에선 true
+                    .path("/")
+                    .maxAge(7 * 24 * 60 * 60) // 7일
+                    .sameSite("Strict")
+                    .build();
+
+            // 3. 응답 본문에 accessToken만 포함
             Map<String, String> result = new HashMap<>();
-            result.put("token", token);
+            result.put("accessToken", accessToken);
 
-            return ResponseEntity.ok(ApiResponse.success(result));
+            return ResponseEntity.ok()
+                    .header("Set-Cookie", cookie.toString())
+                    .body(ApiResponse.success(result));
+
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(), "login_error"));
         }
