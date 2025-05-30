@@ -13,7 +13,7 @@
 .idea/**/shelf
 ./build
 ./gradle
-.gradle
+.gradle/
 # AWS User-specific
 .idea/**/aws.xml
 
