@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,8 +51,16 @@ public class MemberService {
 
     // 내 프로필 조회
     // 추후에 jwt 토큰 사용한걸로 변경 필요
+//    public Member findMyProfile() {
+//        return memberRepository.findMyProfile();
+//    }
+
+    // jwt 인증(이메일로 확인)
     public Member findMyProfile() {
-        return memberRepository.findMyProfile();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("프로필을 찾을 수 없습니다."));
     }
 
     public void updateMyProfile(MemberUpdateRequest request) {
@@ -157,7 +166,9 @@ public class MemberService {
         String accessToken = jwtTokenProvider.createAccessToken(member.getUserId(), member.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getUserId(), member.getEmail());
 
+
         Map<String, String> tokens = new HashMap<>();
+        tokens.put("userId", String.valueOf(member.getUserId()));
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshToken);
         return tokens;

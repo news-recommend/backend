@@ -75,24 +75,24 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody LoginRequest request) {
         try {
-            // 1. accessToken + refreshToken 반환하도록 서비스 수정 필요
             Map<String, String> tokens = memberService.loginWithTokens(request.getEmail(), request.getPassword());
-            String accessToken = tokens.get("accessToken");
-            String refreshToken = tokens.get("refreshToken");
+            String accessToken = (String) tokens.get("accessToken");
+            String refreshToken = (String) tokens.get("refreshToken");
 
-            // 2. HttpOnly 쿠키 설정
+            // HttpOnly 쿠키 설정
             ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(false) // 운영환경에선 true
+                    .secure(false)
                     .path("/")
-                    .maxAge(7 * 24 * 60 * 60) // 7일
+                    .maxAge(7 * 24 * 60 * 60)
                     .sameSite("Strict")
                     .build();
 
-            // 3. 응답 본문에 accessToken만 포함
-            Map<String, String> result = new HashMap<>();
+            // userId, accessToke 정보를 응답에 포함
+            Map<String, Object> result = new HashMap<>();
+            result.put("userId", tokens.get("userId"));
             result.put("accessToken", accessToken);
 
             return ResponseEntity.ok()

@@ -23,8 +23,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/users/signup", "/api/users/login").permitAll() // 인증 없이 허용
+                        .anyRequest().authenticated() // 그 외는 인증 필요
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .build();

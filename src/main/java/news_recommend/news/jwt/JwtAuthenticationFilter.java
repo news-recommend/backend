@@ -4,10 +4,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -20,30 +22,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        System.out.println("🛡️ JwtAuthenticationFilter: 요청 들어옴");
+        String token = resolveToken(request);
 
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); // "Bearer " 제거
+        if (token != null) {
             if (jwtTokenProvider.validateToken(token)) {
                 String email = jwtTokenProvider.getEmailFromToken(token);
-                System.out.println("✅ 토큰 유효함, 사용자: " + email);
+                Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
-                JwtAuthenticationToken authentication = new JwtAuthenticationToken(email, null, null);
+                // 실제 프로젝트에서는 UserDetailsService를 이용한 사용자 정보 조회 및 권한 부여가 일반적
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(email, null, List.of());
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                System.out.println("🔐 인증 객체 설정 완료: " + authentication);
+                System.out.println("✅ JWT 인증 성공: " + email);
             } else {
-                System.out.println("❌ 토큰 유효하지 않음");
+                System.out.println("❌ JWT 인증 실패: 유효하지 않은 토큰");
             }
         } else {
-            System.out.println("❌ Authorization 헤더 없음 or 잘못됨");
+            System.out.println("🛑 Authorization 헤더 없음 또는 형식 불일치");
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // "Bearer " 제거
+        }
+
+        return null;
     }
 }

@@ -72,4 +72,13 @@ public class JwtTokenProvider {
     public void logKey() {
         System.out.println("🔐 JWT SecretKey Hash: " + Base64.getEncoder().encodeToString(secretKey.getEncoded()));
     }
+    public Long getUserIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("userId", Long.class);
+    }
 }
