@@ -4,18 +4,18 @@ package news_recommend.news.utils;
 public class ApiResponse<T> {
 
     private String resultType; // "SUCCESS" or "ERROR"
-    private T data;            // 성공시 데이터
+    private T success;            // 성공시 데이터
     private ApiError error;    // 실패시 에러
 
-    private ApiResponse(String resultType, T data, ApiError error) {
+    private ApiResponse(String resultType, T success, ApiError error) {
         this.resultType = resultType;
-        this.data = data;
+        this.success = success;
         this.error = error;
     }
 
     // 성공 응답
-    public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>("SUCCESS", data, null);
+    public static <T> ApiResponse<T> success(T success) {
+        return new ApiResponse<>("SUCCESS", success, null);
     }
 
     // 에러 응답
@@ -28,8 +28,8 @@ public class ApiResponse<T> {
         return resultType;
     }
 
-    public T getData() {
-        return data;
+    public T getSuccess() {
+        return success;
     }
 
     public ApiError getError() {

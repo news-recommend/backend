@@ -47,7 +47,7 @@ public class MemberController {
     }
 
     // 내 프로필 조회
-    @GetMapping("/me")
+    @GetMapping("/profile")
     public ResponseEntity<ApiResponse<Member>> getMyProfile() {
         try {
             Member member = memberService.findMyProfile();
@@ -94,7 +94,7 @@ public class MemberController {
             Map<String, Object> result = new HashMap<>();
             result.put("userId", tokens.get("userId"));
             result.put("accessToken", accessToken);
-
+            System.out.println("result: " +ApiResponse.success(result));
             return ResponseEntity.ok()
                     .header("Set-Cookie", cookie.toString())
                     .body(ApiResponse.success(result));

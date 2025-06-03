@@ -1,6 +1,7 @@
 package news_recommend.news.issue;
 
 
+import news_recommend.news.utils.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,7 +55,7 @@ public class IssueController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
-        return ResponseEntity.ok(issueService.getIssuesByCategory(category, page, size));
+        return ResponseEntity.ok(ApiResponse.success(issueService.getIssuesByCategory(category, page, size)));
     }
     // 카테고리별 이슈 리스트 코드 추가 끝
 

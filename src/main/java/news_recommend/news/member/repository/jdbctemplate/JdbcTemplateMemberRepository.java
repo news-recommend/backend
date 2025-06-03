@@ -66,11 +66,13 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
 
     @Override
     public int update(Member member) {
-        String sql = "UPDATE member SET name = ?, email = ?, interest_category = ? WHERE user_id = ?";
+        String sql = "UPDATE member SET name = ?, email = ?, interest_category = ?, agegroup = ?, gender = ? WHERE user_id = ?";
         return jdbcTemplate.update(sql,
                 member.getName(),
                 member.getEmail(),
                 member.getInterestCategory(),
+                member.getAgeGroup(),
+                 member.getGender(),
                 member.getUserId()
         );
     }
@@ -82,9 +84,10 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
     }
 
     @Override
-    public Member findMyProfile() {
+    public Member findMyProfile( ) {
         // 이거 인증단에서 어떻게 jwt 토큰 다루는지 체크하고 변경해야함
-        String sql = "SELECT * FROM member WHERE user_id = 1";
+        String sql = "SELECT * FROM member WHERE user_id = ?";
+
         return jdbcTemplate.queryForObject(sql, rowMapper());
     }
 
@@ -123,7 +126,10 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
     @Override
     public Optional<Member> findByEmail(String email) {
         String sql = "SELECT * FROM member WHERE email = ?";
+
         List<Member> result = jdbcTemplate.query(sql, rowMapper(), email);
+
+
         return result.stream().findAny();
     }
 
@@ -134,6 +140,8 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
                 rs.getString("name"),
                 rs.getString("email"),
                 rs.getString("interest_category"),
+                rs.getString("agegroup"),
+                rs.getString("gender"),
                 rs.getString("password")
         );
     }

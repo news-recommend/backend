@@ -11,5 +11,7 @@ public class SignupRequest {
     private String password;
     private String passwordCheck;
     private String name;
+    private String ageGroup;
+    private String gender;
     private List<String> preferredTags;
 }

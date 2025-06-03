@@ -64,14 +64,15 @@ public class MemberService {
     }
 
     public void updateMyProfile(MemberUpdateRequest request) {
-        Long userId = 1L; // TODO: JWT에서 추출하도록 변경
-
-        Optional<Member> memberOpt = memberRepository.findById(userId);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println("email: " + email);
+        Optional<Member> memberOpt = memberRepository.findByEmail(email);
         if (memberOpt.isEmpty()) {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         }
 
         Member member = memberOpt.get();
+        System.out.println("member: " + member);
         boolean changed = false;
 
         if (request.getName() != null) {
@@ -82,24 +83,32 @@ public class MemberService {
             member.setEmail(request.getEmail());
             changed = true;
         }
-        if (request.getInterestCategory() != null) {
-            member.setInterestCategory(request.getInterestCategory());
+        if (request.getPreferredTags() != null) {
+            List<String> tags = request.getPreferredTags();
+            String joinedTags = (tags == null || tags.isEmpty())
+                    ? ""
+                    : String.join(",", tags.stream().filter(tag -> tag != null).toList());
+            member.setInterestCategory(joinedTags);
             changed = true;
         }
-        if (request.getNowPassword() != null && request.getNewPassword() != null) {
-            // 실제로는 비밀번호는 별도 테이블/필드에 암호화되어 있어야 함
-            String currentPassword = memberRepository.findPasswordByUserId(userId);
-            // 예시
-            if (!request.getNowPassword().equals(currentPassword)) {
-                throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-            }
-            memberRepository.updatePassword(userId, request.getNewPassword());
+        if (request.getGender() != null) {
+            member.setGender(request.getGender());
             changed = true;
-        } else if (request.getNowPassword() != null || request.getNewPassword() != null) {
+        }
+        if (request.getAgeGroup() != null) {
+            member.setAgeGroup(request.getAgeGroup());
+            changed = true;
+        }
+        if (request.getNewPassword() != null && !request.getNewPassword().isBlank()) {
+
+            memberRepository.updatePassword(member.getUserId(), request.getNewPassword());
+            changed = true;
+        } else if ( request.getNewPassword() == null) {
             throw new IllegalArgumentException("입력 형식이 올바르지 않습니다.");
         }
 
         if (changed) {
+            System.out.println("changed");
             memberRepository.update(member);
         }
     }
@@ -133,6 +142,8 @@ public class MemberService {
                 request.getName(),
                 request.getEmail(),
                 joinedTags,
+                request.getAgeGroup(),
+                request.getGender(),
                 request.getPassword()
         );
 
