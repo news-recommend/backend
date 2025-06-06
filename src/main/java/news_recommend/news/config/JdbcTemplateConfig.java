@@ -57,13 +57,13 @@ public class JdbcTemplateConfig {
     }
 
     @Bean
-    public BookmarkRepository bookmarkRepository() {
-        return new JdbcTemplateBookmarkRepository(dataSource);
+    public BookmarkRepository bookmarkRepository(JdbcTemplate jdbcTemplate) {
+        return new JdbcTemplateBookmarkRepository(jdbcTemplate); // ✅
     }
 
     @Bean
-    public BookmarkService bookmarkService() {
-        return new BookmarkService(bookmarkRepository());
+    public BookmarkService bookmarkService(BookmarkRepository bookmarkRepository) {
+        return new BookmarkService(bookmarkRepository); // ✅ OK
     }
 }
 
