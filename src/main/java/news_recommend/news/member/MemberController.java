@@ -1,5 +1,9 @@
 package news_recommend.news.member;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import news_recommend.news.jwt.JwtTokenProvider;
 import news_recommend.news.member.dto.LoginRequest;
 import news_recommend.news.member.dto.SignupRequest;
 import news_recommend.news.utils.ApiResponse;
@@ -14,12 +18,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")  // 경로 통일(충돌 해결)
+
 public class MemberController {
 
     private final MemberService memberService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberController(final MemberService memberService) {
+
+    public MemberController(final MemberService memberService, JwtTokenProvider jwtTokenProvider) {
         this.memberService = memberService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     //  회원가입 API
@@ -102,5 +110,35 @@ public class MemberController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(), "login_error"));
         }
+    }
+
+    // 로그인 유지
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> reissueAccessToken(HttpServletRequest request) {
+        String refreshToken = extractCookie(request, "refreshToken");
+
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("유효하지 않은 리프레시 토큰입니다.", "unauthorized"));
+        }
+
+        String userEmail = jwtTokenProvider.getEmailFromToken(refreshToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        String newAccessToken = jwtTokenProvider.createAccessToken(userId, userEmail);  // ✅ 이메일과 ID 모두 전달
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", newAccessToken);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    private String extractCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals(name)) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }
