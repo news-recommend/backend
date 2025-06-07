@@ -95,7 +95,7 @@ public class MemberController {
                     .secure(false)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Strict")
+                    .sameSite("Lax")
                     .build();
 
             // userId, accessToke 정보를 응답에 포함
