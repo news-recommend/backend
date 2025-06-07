@@ -32,7 +32,7 @@
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries
-
+build/
 build/reports/problems/problems-report.html
 
 # Gradle and Maven with auto-import
