@@ -7,6 +7,7 @@ public class Issue {
     private String issueName;
     private String category;
     private String emotion;
+    private String title;
 
 
     public Issue() {}
@@ -41,6 +42,10 @@ public class Issue {
         return emotion;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     public void setIssueId(Long issueId) {
         this.issueId = issueId;
     }
@@ -55,5 +60,9 @@ public class Issue {
 
     public void setEmotion(String emotion) {
         this.emotion = emotion;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }
