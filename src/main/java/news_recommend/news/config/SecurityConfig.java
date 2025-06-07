@@ -29,8 +29,15 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/signup", "/api/users/login", "/api/auth/validate", "/error").permitAll() // 인증 없이 허용
-                        .anyRequest().authenticated() // 그 외는 인증 필요
+                        .requestMatchers(
+                                "/api/users/signup",
+                                "/api/users/login",
+                                "/api/auth/validate",
+                                "/api/issues/*/news",
+                                "/api/issues/analyze", // ✅ 이 경로는 인증 없이 허용(임의)
+                                "/error"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .build();
