@@ -61,14 +61,14 @@ public class IssueController {
     }
 
     // 카테고리별 이슈 리스트 코드 추가
-    @GetMapping("/category")
-    public ResponseEntity<?> getIssuesByCategory(
-            @RequestParam String category,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "5") int size
-    ) {
-        return ResponseEntity.ok(ApiResponse.success(issueService.getIssuesByCategory(category, page, size)));
-    }
+//    @GetMapping("/category")
+//    public ResponseEntity<?> getIssuesByCategory(
+//            @RequestParam String category,
+//            @RequestParam(defaultValue = "1") int page,
+//            @RequestParam(defaultValue = "5") int size
+//    ) {
+//        return ResponseEntity.ok(ApiResponse.success(issueService.getIssuesByCategory(category, page, size)));
+//    }
     // 카테고리별 이슈 리스트 코드 추가 끝
 
     // 네이버 뉴스 API로 이슈명에 해당하는 뉴스 조회
