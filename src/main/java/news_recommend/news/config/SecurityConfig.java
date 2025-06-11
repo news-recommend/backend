@@ -36,6 +36,8 @@ public class SecurityConfig {
                                 "/api/issues/*/news",
                                 "/api/users/reissue",
                                 "/api/issues/analyze", // ✅ 이 경로는 인증 없이 허용(임의)
+                                "/api/issues/category/**",
+                                "/api/issues/category/grouped",
                                 "/error"
                         ).permitAll()
                         .anyRequest().authenticated()

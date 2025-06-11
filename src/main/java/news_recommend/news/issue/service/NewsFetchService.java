@@ -23,7 +23,12 @@ public class NewsFetchService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 키워드 기반 뉴스 검색
+     */
     public List<RawNews> fetch(String keyword) {
+        System.out.println("\uD83D\uDFE2 fetch() 호출됨 - 키워드: " + keyword);
+
         String url = "https://openapi.naver.com/v1/search/news.json";
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
@@ -36,13 +41,14 @@ public class NewsFetchService {
         headers.set("X-Naver-Client-Secret", clientSecret);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(
-                builder.toUriString(), HttpMethod.GET, entity, String.class);
-
-        List<RawNews> results = new ArrayList<>();
 
         try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    builder.toUriString(), HttpMethod.GET, entity, String.class);
+
+            List<RawNews> results = new ArrayList<>();
             JsonNode root = objectMapper.readTree(response.getBody());
+
             for (JsonNode item : root.path("items")) {
                 RawNews news = new RawNews();
                 news.setTitle(item.path("title").asText().replaceAll("<[^>]*>", ""));
@@ -51,7 +57,12 @@ public class NewsFetchService {
                 news.setPubDate(item.path("pubDate").asText());
                 results.add(news);
             }
+
             return results;
+
+        } catch (org.springframework.web.client.HttpClientErrorException.TooManyRequests e) {
+            System.err.println("\u2757 네이버 뉴스 API 호출 속도 제한 초과 (429): " + e.getMessage());
+            return Collections.emptyList();
         } catch (Exception e) {
             throw new RuntimeException("네이버 뉴스 API 응답 파싱 실패", e);
         }
