@@ -2,6 +2,7 @@ package news_recommend.news.member;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import news_recommend.news.jwt.JwtTokenProvider;
 import news_recommend.news.member.dto.LoginRequest;
@@ -129,6 +130,21 @@ public class MemberController {
         Map<String, Object> result = new HashMap<>();
         result.put("accessToken", newAccessToken);
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    // 로그아웃 (쿠키삭제)
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
+        // refreshToken 쿠키 삭제
+        Cookie expiredCookie = new Cookie("refreshToken", null);
+        expiredCookie.setPath("/");
+        expiredCookie.setMaxAge(0); // 즉시 만료
+        expiredCookie.setHttpOnly(true);
+        expiredCookie.setSecure(false); // HTTPS 사용시 true 권장
+
+        response.addCookie(expiredCookie);
+
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     private String extractCookie(HttpServletRequest request, String name) {
