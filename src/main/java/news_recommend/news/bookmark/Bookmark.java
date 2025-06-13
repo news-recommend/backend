@@ -18,7 +18,7 @@ public class Bookmark {
     public Bookmark() {}
 
     public Bookmark(String memberEmail, Long issueId) {
-
+        this.memberEmail = memberEmail;
+        this.issueId = issueId;
     }
-
 }
