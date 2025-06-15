@@ -1,10 +1,12 @@
 package news_recommend.news.issue;
 
 import news_recommend.news.issue.dto.IssueDetailResponse;
+import news_recommend.news.issue.dto.IssuePreviewResponse;
 import news_recommend.news.issue.dto.RawNews;
 import news_recommend.news.issue.service.NewsFetchService;
 import news_recommend.news.llm.LLMService;
 import news_recommend.news.utils.ApiResponse;
+import news_recommend.news.utils.PagedResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,6 +79,18 @@ public class IssueController {
         List<RawNews> news = newsFetchService.fetch(issueName);
         return ResponseEntity.ok(news);
     }
+
+    @GetMapping("/search/{keyword}")
+    public ResponseEntity<ApiResponse<PagedResponse<IssuePreviewResponse>>> searchIssues(
+            @PathVariable String keyword,
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        System.out.println("keyword: " + keyword + ", sort: " + sort + ", page: " + page);
+        PagedResponse<IssuePreviewResponse> result = issueService.searchIssues(keyword, sort, page, size);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
 
     // 북마크를 위한 db저장용?
     @GetMapping("/{id}/detail")

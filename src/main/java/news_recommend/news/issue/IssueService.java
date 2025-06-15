@@ -2,8 +2,10 @@ package news_recommend.news.issue;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import news_recommend.news.issue.dto.IssuePreviewResponse;
 import news_recommend.news.issue.repository.IssueRepository;
-
+import news_recommend.news.utils.PagedResponse;
+import news_recommend.news.utils.Pagination;
 
 
 import java.util.List;
@@ -84,5 +86,26 @@ public class IssueService {
     }
     // 카테고리별 이슈 리스트 코드 추가 끝
 
+
+    public PagedResponse<IssuePreviewResponse> searchIssues(String keyword, String sort, int page, int size) {
+        int offset =  (page - 1) * size;
+        List<IssuePreviewResponse> issues = issueRepository.findByKeywordAndSort(keyword, sort, size, offset);
+        System.out.println("searchIssues: " + issues);
+        for (IssuePreviewResponse res : issues) {
+            System.out.println("ID: " + res.getIssueId());
+            System.out.println("Name: " + res.getIssueName());
+            System.out.println("Category: " + res.getCategory());
+            System.out.println("News List: " + String.join(", ", res.getNewsList()));
+            System.out.println("Bookmarked: " + res.isBookmarked());
+            System.out.println("----------");
+        }
+        int totalItems = issueRepository.countByKeyword(keyword);
+
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        boolean hasNext = page < totalPages;
+        Pagination pagination = new Pagination(page , size, totalItems, totalPages, hasNext);
+
+        return new PagedResponse<>(pagination, issues);
+    }
 
 }
