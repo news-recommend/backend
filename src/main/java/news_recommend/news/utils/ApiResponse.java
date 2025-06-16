@@ -7,7 +7,7 @@ public class ApiResponse<T> {
     private T success;            // 성공시 데이터
     private ApiError error;    // 실패시 에러
 
-    private ApiResponse(String resultType, T success, ApiError error) {
+    public ApiResponse(String resultType, T success, ApiError error) {
         this.resultType = resultType;
         this.success = success;
         this.error = error;
@@ -23,9 +23,18 @@ public class ApiResponse<T> {
         return new ApiResponse<>("ERROR", null, new ApiError(reason, title));
     }
 
+    // 단순 메시지 기반 실패 응답 (common 방식 지원용)
+    public static <T> ApiResponse<T> fail(String message) {
+        return new ApiResponse<>("FAIL", null, new ApiError(message, null));
+    }
+
+
+
+
     // getter
+
     public String getResultType() {
-        return resultType;
+        return resultType.equals("FAIL") ? "ERROR" : resultType;
     }
 
     public T getSuccess() {

@@ -6,7 +6,7 @@ import news_recommend.news.issue.dto.IssuePreviewResponse;
 import news_recommend.news.issue.dto.RawNews;
 import news_recommend.news.issue.service.NewsFetchService;
 import news_recommend.news.llm.LLMService;
-import news_recommend.common.response.ApiResponse;
+import news_recommend.news.utils.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
