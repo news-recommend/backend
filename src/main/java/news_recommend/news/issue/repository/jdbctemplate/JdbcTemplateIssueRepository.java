@@ -36,12 +36,13 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
 
     @Override
     public Issue save(Issue issue) {
-        String sql = "INSERT INTO issue (issue_name, category, emotion) VALUES (?, ?, ?) RETURNING issue_id";
+        String sql = "INSERT INTO issue (issue_name, category, emotion, news_list) VALUES (?, ?, ?, ?) RETURNING issue_id";
         System.out.println(issue);
         Long issueId = jdbcTemplate.queryForObject(sql, new Object[]{
                 issue.getIssueName(),
                 issue.getCategory(),
-                issue.getEmotion()
+                issue.getEmotion(),
+                issue.getNewsList()
         }, Long.class);
 
         issue.setIssueId(issueId);
@@ -88,11 +89,16 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
 
 
     private RowMapper<Issue> rowMapper() {
-        return (rs, rowNum ) -> new Issue(
-                rs.getLong("issue_id"),
-                rs.getString("issue_name"),
-                rs.getString("category"),
-                rs.getString("emotion")
-        );
+        return (rs, rowNum) -> {
+            Issue issue = new Issue();
+            issue.setIssueId(rs.getLong("issue_id"));
+            issue.setIssueName(rs.getString("issue_name"));
+            issue.setCategory(rs.getString("category"));
+            issue.setEmotion(rs.getString("emotion"));
+            issue.setNewsList(rs.getString("news_list"));
+            issue.setThumbnail(rs.getString("thumbnail"));
+            issue.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+            return issue;
+        };
     }
 }

@@ -16,6 +16,9 @@ public class IssueDetailResponse {
         this.isBookmarked = isBookmarked;
     }
 
+    public IssueDetailResponse(String string, String issueName, String category, List<NewsWithScore> enriched) {
+    }
+
     // 내부 정적 클래스 정의
     public static class NewsWithScore {
         private String title;
@@ -24,6 +27,9 @@ public class IssueDetailResponse {
         private String pubDate;
         private int sentimentScore;
 
+        public NewsWithScore() {
+        }
+
         public NewsWithScore(String title, String link, String description, String pubDate, int sentimentScore) {
             this.title = title;
             this.link = link;
@@ -31,6 +37,16 @@ public class IssueDetailResponse {
             this.pubDate = pubDate;
             this.sentimentScore = sentimentScore;
         }
+
+        public NewsWithScore(String title, String link, int sentimentScore) {
+            this.title = title;
+            this.link = link;
+            this.sentimentScore = sentimentScore;
+            this.description = null;
+            this.pubDate = null;
+        }
+
+
 
         // Getters
         public String getTitle() { return title; }

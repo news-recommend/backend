@@ -67,4 +67,10 @@ public class NewsFetchService {
             throw new RuntimeException("네이버 뉴스 API 응답 파싱 실패", e);
         }
     }
+    /**
+     * 카테고리 기반 뉴스 검색 (스케줄러 전용)
+     */
+    public List<RawNews> fetchNewsByCategory(String category) {
+        return fetch(category); // 카테고리를 키워드처럼 사용
+    }
 }
