@@ -2,6 +2,7 @@ package news_recommend.news.issue.repository.jdbctemplate;
 
 
 import news_recommend.news.issue.Issue;
+import news_recommend.news.issue.dto.IssuePreviewResponse;
 import news_recommend.news.issue.repository.IssueRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -100,5 +102,47 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
             issue.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
             return issue;
         };
+    }
+
+    public List<IssuePreviewResponse> findByKeywordAndSort(String keyword, String sort, int limit, int offset) {
+        String orderBy = switch (sort) {
+            case "popular" -> " bookmark_count DESC";
+            case "latest" -> " created_at DESC";
+            default -> " created_at DESC";
+        };
+
+        String sql = """
+            SELECT i.issue_id, i.issue_name, i.category, i.news_list
+            FROM issue i
+            WHERE LOWER(i.issue_name) LIKE ?
+            ORDER BY """ + orderBy + """
+            LIMIT ? OFFSET ?
+        """;
+
+        // 디버깅용 로깅
+        System.out.println("SQL: " + sql);
+        System.out.println("Keyword: %" + keyword + "%");
+        System.out.println("Limit: " + limit + ", Offset: " + offset);
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new IssuePreviewResponse(
+                rs.getLong("issue_id"),
+                rs.getString("issue_name"),
+                rs.getString("category"),
+                parseNewsList(rs.getString("news_list")),
+                false // isBookmarked 처리 필요 시 사용자 정보 추가
+        ), "%" + keyword + "%", limit, offset);
+    }
+
+    public int countByKeyword(String keyword) {
+        String sql = "SELECT COUNT(*) FROM issue WHERE issue_name LIKE ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, "%" + keyword + "%");
+    }
+
+    private List<String> parseNewsList(String rawNewsList) {
+        if (rawNewsList == null || rawNewsList.isBlank()) return List.of();
+        return Arrays.stream(rawNewsList.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
     }
 }

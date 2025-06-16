@@ -6,13 +6,16 @@ public class IssuePreviewResponse {
     private Long issueId;
     private String issueName;
     private String category;
+
     private List<Integer> sentimentTrend;
     private List<RawNews> newsList;
     private String thumbnail;
     private boolean isBookmarked;
 
-    public IssuePreviewResponse(Long issueId, String issueName, String category, List<Integer> sentimentTrend,
-                                List<RawNews> newsList, String thumbnail, boolean isBookmarked) {
+    // ✅ 통합 생성자
+    public IssuePreviewResponse(Long issueId, String issueName, String category,
+                                 List<Integer> sentimentTrend, List<RawNews> newsList,
+                                 String thumbnail, boolean isBookmarked) {
         this.issueId = issueId;
         this.issueName = issueName;
         this.category = category;
@@ -33,6 +36,7 @@ public class IssuePreviewResponse {
     public String getCategory() {
         return category;
     }
+
 
     public List<Integer> getSentimentTrend() {
         return sentimentTrend;
