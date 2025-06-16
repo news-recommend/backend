@@ -1,6 +1,7 @@
 package news_recommend.news.issue.repository;
 
 import news_recommend.news.issue.Issue;
+import news_recommend.news.issue.dto.IssuePreviewResponse;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ public interface IssueRepository {
 
     Optional<Issue> findByName(String name);
 
+    int countByKeyword(String keyword);
 
-
+    List<IssuePreviewResponse> findByKeywordAndSort(String keyword, String sort, int limit, int offset);
 }

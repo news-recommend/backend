@@ -1,5 +1,10 @@
 package news_recommend.news.member;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import news_recommend.news.jwt.JwtTokenProvider;
 import news_recommend.news.member.dto.LoginRequest;
 import news_recommend.news.member.dto.SignupRequest;
 import news_recommend.news.utils.ApiResponse;
@@ -14,12 +19,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")  // 경로 통일(충돌 해결)
+
 public class MemberController {
 
     private final MemberService memberService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberController(final MemberService memberService) {
+
+    public MemberController(final MemberService memberService, JwtTokenProvider jwtTokenProvider) {
         this.memberService = memberService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     //  회원가입 API
@@ -87,7 +96,7 @@ public class MemberController {
                     .secure(false)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Strict")
+                    .sameSite("Lax")
                     .build();
 
             // userId, accessToke 정보를 응답에 포함
@@ -102,5 +111,50 @@ public class MemberController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage(), "login_error"));
         }
+    }
+
+    // 로그인 유지
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> reissueAccessToken(HttpServletRequest request) {
+        String refreshToken = extractCookie(request, "refreshToken");
+
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("유효하지 않은 리프레시 토큰입니다.", "unauthorized"));
+        }
+
+        String userEmail = jwtTokenProvider.getEmailFromToken(refreshToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        String newAccessToken = jwtTokenProvider.createAccessToken(userId, userEmail);  // ✅ 이메일과 ID 모두 전달
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", newAccessToken);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    // 로그아웃 (쿠키삭제)
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
+        // refreshToken 쿠키 삭제
+        Cookie expiredCookie = new Cookie("refreshToken", null);
+        expiredCookie.setPath("/");
+        expiredCookie.setMaxAge(0); // 즉시 만료
+        expiredCookie.setHttpOnly(true);
+        expiredCookie.setSecure(false); // HTTPS 사용시 true 권장
+
+        response.addCookie(expiredCookie);
+
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    private String extractCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals(name)) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }
