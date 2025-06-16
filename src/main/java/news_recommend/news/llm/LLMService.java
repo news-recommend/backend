@@ -18,45 +18,8 @@ public class LLMService {
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
 
-
-    // 뉴스 제목 기반 카테고리 분류
-    public String classifyCategory(List<String> titles) {
-        String prompt = "다음 뉴스 제목을 보고 15개 카테고리 중 하나로 분류해줘. " +
-                "카테고리는 정치, 경제, 사회, 사건/사고, IT/과학, 자동차, 국제, 교육, 문화, 여행/레저, 연예, 환경, 부동산, 스포츠, 생활/건강이야.\n\n";
-
-        for (String title : titles) {
-            prompt += "- " + title + "\n";
-        }
-        prompt += "\n이 뉴스들의 공통 카테고리는? (정확한 하나만 반환해줘)";
-
-        return callOpenAI(prompt);
-    }
-
-    // 뉴스 본문 기반 카테고리 분류
-    public String classifyCategory(String query, List<RawNews> newsList) {
-        String prompt = "다음 뉴스들을 참고하여 '" + query + "' 이슈의 카테고리를 다음 중 하나로 분류해줘:\n" +
-                "정치, 경제, 사회, 사건/사고, IT/과학, 자동차, 국제, 교육, 문화, 여행/레저, 연예, 환경, 부동산, 스포츠, 생활/건강\n\n" +
-                newsList.stream()
-                        .map(n -> "제목: " + n.getTitle() + "\n내용: " + n.getDescription())
-                        .collect(Collectors.joining("\n\n")) +
-                "\n\n위 뉴스들의 공통 카테고리는? 정확하게 하나만 답해줘.";
-
-        return callOpenAI(prompt);
-    }
-
-    // 뉴스 감정 점수 분석 (1 ~ 100)
-    public int analyzeSentimentScore(String title, String description) {
-        String prompt = "다음 뉴스의 제목과 내용을 바탕으로 감정을 분석해서 1~100 사이의 점수로 나타내줘.\n" +
-                "1에 가까우면 부정, 50은 중립, 100에 가까우면 긍정이야.\n숫자만 반환해줘.\n\n" +
-                "제목: " + title + "\n내용: " + description;
-
-        String result = callOpenAI(prompt).replaceAll("[^\\d]", "");
-        try {
-            return Integer.parseInt(result);
-        } catch (NumberFormatException e) {
-            System.err.println("⚠️ 감정 점수 파싱 실패: " + result);
-            return 50;
-        }
+    public Map<String, List<RawNews>> groupNewsByIssue(List<RawNews> newsList) {
+        return groupByIssue(newsList);
     }
 
     // 이슈 그룹핑
@@ -76,7 +39,6 @@ public class LLMService {
 
         String response = callOpenAI(prompt.toString());
 
-        // 파싱
         Map<String, List<RawNews>> grouped = new LinkedHashMap<>();
         String[] blocks = response.split("뉴스 제목:");
 
@@ -90,10 +52,7 @@ public class LLMService {
             String title = parts[0].trim();
             String issue = parts[1].trim();
 
-            if (!grouped.containsKey(issue)) {
-                grouped.put(issue, new ArrayList<>());
-            }
-
+            grouped.computeIfAbsent(issue, k -> new ArrayList<>());
             if (titleMap.containsKey(title)) {
                 grouped.get(issue).add(titleMap.get(title));
             }
@@ -102,7 +61,7 @@ public class LLMService {
         return grouped;
     }
 
-    // 뉴스 그룹에 대해 대표 이슈 제목 추출
+    // 대표 이슈 제목 생성
     public String generateRepresentativeTitle(List<RawNews> newsGroup) {
         String prompt = "다음 뉴스 제목들과 내용을 참고하여, 이 뉴스들을 대표할 수 있는 간결한 이슈 제목을 만들어줘.\n" +
                 "중복된 문장을 반복하지 말고, 최대한 핵심만 요약해서 한 줄로 표현해줘.\n" +
@@ -114,6 +73,43 @@ public class LLMService {
         }
 
         return callOpenAI(prompt).trim();
+    }
+
+    // 감정 분석 일괄 처리 메서드
+    public List<RawNews> analyze(List<RawNews> newsList) {
+        for (RawNews news : newsList) {
+            int score = analyzeSentimentScore(news.getTitle(), news.getDescription());
+            news.setSentimentScore(score);
+        }
+        return newsList;
+    }
+
+    // 개별 뉴스 감정 점수 분석
+    public int analyzeSentimentScore(String title, String description) {
+        String prompt = "다음 뉴스의 제목과 내용을 바탕으로 감정을 분석해서 1~100 사이의 점수로 나타내줘.\n" +
+                "1에 가까우면 부정, 50은 중립, 100에 가까우면 긍정이야.\n숫자만 반환해줘.\n\n" +
+                "제목: " + title + "\n내용: " + description;
+
+        String result = callOpenAI(prompt).replaceAll("[^\\d]", "");
+        try {
+            return Integer.parseInt(result);
+        } catch (NumberFormatException e) {
+            System.err.println("⚠️ 감정 점수 파싱 실패: " + result);
+            return 50;
+        }
+    }
+
+    // 뉴스 제목 리스트 기반 카테고리 분류
+    public String classifyCategory(List<String> titles) {
+        String prompt = "다음 뉴스 제목을 보고 15개 카테고리 중 하나로 분류해줘. " +
+                "카테고리는 정치, 경제, 사회, 사건/사고, IT/과학, 자동차, 국제, 교육, 문화, 여행/레저, 연예, 환경, 부동산, 스포츠, 생활/건강이야.\n\n";
+
+        for (String title : titles) {
+            prompt += "- " + title + "\n";
+        }
+        prompt += "\n이 뉴스들의 공통 카테고리는? (정확한 하나만 반환해줘)";
+
+        return callOpenAI(prompt);
     }
 
 

@@ -6,8 +6,12 @@ import news_recommend.news.bookmark.repository.BookmarkRepository;
 import news_recommend.news.bookmark.repository.jdbctemplate.JdbcTemplateBookmarkRepository;
 import news_recommend.news.issue.IssueService;
 import news_recommend.news.issue.repository.IssueRepository;
+import news_recommend.news.issue.repository.NewsRepository;
 import news_recommend.news.issue.repository.jdbctemplate.JdbcTemplateIssueRepository;
+import news_recommend.news.issue.repository.jdbctemplate.JdbcTemplateNewsRepository;
+import news_recommend.news.issue.service.NewsFetchService;
 import news_recommend.news.jwt.JwtTokenProvider;
+import news_recommend.news.llm.LLMService;
 import news_recommend.news.member.MemberService;
 import news_recommend.news.member.repository.MemberRepository;
 import news_recommend.news.member.repository.jdbctemplate.JdbcTemplateMemberRepository;
@@ -53,8 +57,14 @@ public class JdbcTemplateConfig {
 
     @Bean
     public IssueService issueService() {
-        return new IssueService(issueRepository());
+        return new IssueService(
+                issueRepository(),
+                newsRepository(jdbcTemplate()),
+                newsFetchService(),
+                llmService()
+        );
     }
+
 
     @Bean
     public BookmarkRepository bookmarkRepository(JdbcTemplate jdbcTemplate) {
@@ -65,5 +75,21 @@ public class JdbcTemplateConfig {
     public BookmarkService bookmarkService(BookmarkRepository bookmarkRepository) {
         return new BookmarkService(bookmarkRepository); // ✅ OK
     }
+
+    @Bean
+    public NewsRepository newsRepository(JdbcTemplate jdbcTemplate) {
+        return new JdbcTemplateNewsRepository(jdbcTemplate);  //
+    }
+
+    @Bean
+    public NewsFetchService newsFetchService() {
+        return new NewsFetchService();  // 혹은 생성자에 필요한 값 넣기
+    }
+
+    @Bean
+    public LLMService llmService() {
+        return new LLMService();  // 마찬가지로 필요한 의존성 있으면 주입
+    }
+
 }
 

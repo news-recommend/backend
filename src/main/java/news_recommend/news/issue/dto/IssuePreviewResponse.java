@@ -6,15 +6,22 @@ public class IssuePreviewResponse {
     private Long issueId;
     private String issueName;
     private String category;
-    private List<String> newsList;
+
+    private List<Integer> sentimentTrend;
+    private List<RawNews> newsList;
+    private String thumbnail;
     private boolean isBookmarked;
 
+    // ✅ 통합 생성자
     public IssuePreviewResponse(Long issueId, String issueName, String category,
-                                List<String> newsList, boolean isBookmarked) {
+                                 List<Integer> sentimentTrend, List<RawNews> newsList,
+                                 String thumbnail, boolean isBookmarked) {
         this.issueId = issueId;
         this.issueName = issueName;
         this.category = category;
+        this.sentimentTrend = sentimentTrend;
         this.newsList = newsList;
+        this.thumbnail = thumbnail;
         this.isBookmarked = isBookmarked;
     }
 
@@ -30,8 +37,17 @@ public class IssuePreviewResponse {
         return category;
     }
 
-    public List<String> getNewsList() {
+
+    public List<Integer> getSentimentTrend() {
+        return sentimentTrend;
+    }
+
+    public List<RawNews> getNewsList() {
         return newsList;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
     }
 
     public boolean isBookmarked() {

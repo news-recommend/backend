@@ -38,63 +38,63 @@ public class CategoryIssueController {
             Map.entry("생활/건강", Arrays.asList("생활", "건강", "운동", "건강식", "질병"))
     );
 
-    @GetMapping("/category")
-    public ResponseEntity<List<IssueDetailResponse>> getIssuesByCategoryRealtime(@RequestParam String name) {
-        Map<String, List<NewsWithScore>> groupedNews = new LinkedHashMap<>();
-        Set<String> seenTitles = new HashSet<>();
-
-        int maxIssues = 5;
-        int maxAttempts = 5;
-        int attempt = 0;
-
-        System.out.println("\uD83D\uDFE2 요청 시작 - 카테고리: " + name);
-
-        List<String> keywordList = CATEGORY_KEYWORDS_MAP.getOrDefault(name, List.of(name));
-
-        while (groupedNews.size() < maxIssues && attempt < maxAttempts) {
-            String query = keywordList.get(attempt % keywordList.size());
-            List<RawNews> fetched = newsFetchService.fetch(query);
-            System.out.println("\uD83D\uDCE6 [" + attempt + "회차] 키워드: " + query + ", 뉴스 개수: " + fetched.size());
-
-            for (RawNews news : fetched) {
-                if (seenTitles.contains(news.getTitle())) continue;
-
-                String fullText = news.getTitle() + " " + news.getDescription();
-                String predictedCategory = llmService.classifyCategory(List.of(fullText));
-
-                String normalizedPredicted = predictedCategory.replaceAll("\\s", "").toLowerCase();
-                String normalizedTarget = name.replaceAll("\\s", "").toLowerCase();
-
-                boolean isMatchStrict = normalizedPredicted.equals(normalizedTarget);
-                boolean isMatchSoft = normalizedPredicted.contains(normalizedTarget) || normalizedTarget.contains(normalizedPredicted);
-
-                if (attempt < 2 && !isMatchStrict) continue;
-                if (attempt >= 2 && !isMatchSoft) continue;
-
-                int score = llmService.analyzeSentimentScore(news.getTitle(), news.getDescription());
-
-                NewsWithScore newsWithScore = new NewsWithScore(
-                        news.getTitle(), news.getLink(), news.getDescription(), news.getPubDate(), score);
-
-                String issueKey = news.getTitle();
-                groupedNews.putIfAbsent(issueKey, new ArrayList<>());
-                groupedNews.get(issueKey).add(newsWithScore);
-                seenTitles.add(news.getTitle());
-
-                if (groupedNews.size() >= maxIssues) break;
-            }
-
-            attempt++;
-        }
-
-        List<IssueDetailResponse> result = groupedNews.entrySet().stream()
-                .filter(e -> e.getValue().size() >= 1)
-                .map(e -> new IssueDetailResponse(e.getKey(), name, e.getValue(), false))
-                .limit(maxIssues)
-                .toList();
-
-        return ResponseEntity.ok(result);
-    }
+//    @GetMapping("/category")
+//    public ResponseEntity<List<IssueDetailResponse>> getIssuesByCategoryRealtime(@RequestParam String name) {
+//        Map<String, List<NewsWithScore>> groupedNews = new LinkedHashMap<>();
+//        Set<String> seenTitles = new HashSet<>();
+//
+//        int maxIssues = 5;
+//        int maxAttempts = 5;
+//        int attempt = 0;
+//
+//        System.out.println("\uD83D\uDFE2 요청 시작 - 카테고리: " + name);
+//
+//        List<String> keywordList = CATEGORY_KEYWORDS_MAP.getOrDefault(name, List.of(name));
+//
+//        while (groupedNews.size() < maxIssues && attempt < maxAttempts) {
+//            String query = keywordList.get(attempt % keywordList.size());
+//            List<RawNews> fetched = newsFetchService.fetch(query);
+//            System.out.println("\uD83D\uDCE6 [" + attempt + "회차] 키워드: " + query + ", 뉴스 개수: " + fetched.size());
+//
+//            for (RawNews news : fetched) {
+//                if (seenTitles.contains(news.getTitle())) continue;
+//
+//                String fullText = news.getTitle() + " " + news.getDescription();
+//                String predictedCategory = llmService.classifyCategory(List.of(fullText));
+//
+//                String normalizedPredicted = predictedCategory.replaceAll("\\s", "").toLowerCase();
+//                String normalizedTarget = name.replaceAll("\\s", "").toLowerCase();
+//
+//                boolean isMatchStrict = normalizedPredicted.equals(normalizedTarget);
+//                boolean isMatchSoft = normalizedPredicted.contains(normalizedTarget) || normalizedTarget.contains(normalizedPredicted);
+//
+//                if (attempt < 2 && !isMatchStrict) continue;
+//                if (attempt >= 2 && !isMatchSoft) continue;
+//
+//                int score = llmService.analyzeSentimentScore(news.getTitle(), news.getDescription());
+//
+//                NewsWithScore newsWithScore = new NewsWithScore(
+//                        news.getTitle(), news.getLink(), news.getDescription(), news.getPubDate(), score);
+//
+//                String issueKey = news.getTitle();
+//                groupedNews.putIfAbsent(issueKey, new ArrayList<>());
+//                groupedNews.get(issueKey).add(newsWithScore);
+//                seenTitles.add(news.getTitle());
+//
+//                if (groupedNews.size() >= maxIssues) break;
+//            }
+//
+//            attempt++;
+//        }
+//
+//        List<IssueDetailResponse> result = groupedNews.entrySet().stream()
+//                .filter(e -> e.getValue().size() >= 1)
+//                .map(e -> new IssueDetailResponse(e.getKey(), name, e.getValue(), false))
+//                .limit(maxIssues)
+//                .toList();
+//
+//        return ResponseEntity.ok(result);
+//    }
 
     @GetMapping("/category/grouped")
     public ResponseEntity<List<IssueDetailResponse>> getGroupedIssuesByCategory(@RequestParam String name) {

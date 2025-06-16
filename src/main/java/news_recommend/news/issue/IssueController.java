@@ -1,5 +1,6 @@
 package news_recommend.news.issue;
 
+import news_recommend.common.response.PaginationResponse;
 import news_recommend.news.issue.dto.IssueDetailResponse;
 import news_recommend.news.issue.dto.IssuePreviewResponse;
 import news_recommend.news.issue.dto.RawNews;
@@ -10,9 +11,7 @@ import news_recommend.news.utils.PagedResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/issues")
@@ -63,15 +62,26 @@ public class IssueController {
     }
 
     // 카테고리별 이슈 리스트 코드 추가
-//    @GetMapping("/category")
-//    public ResponseEntity<?> getIssuesByCategory(
-//            @RequestParam String category,
-//            @RequestParam(defaultValue = "1") int page,
-//            @RequestParam(defaultValue = "5") int size
-//    ) {
-//        return ResponseEntity.ok(ApiResponse.success(issueService.getIssuesByCategory(category, page, size)));
-//    }
-    // 카테고리별 이슈 리스트 코드 추가 끝
+    @GetMapping("/category")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCategoryIssues(
+            @RequestParam("category") String category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        List<IssuePreviewResponse> issues = issueService.getIssuesByCategory(category, page, size);
+        int totalItems = issueService.getTotalIssuesByCategory(category);
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        boolean hasNext = page < totalPages;
+
+        PaginationResponse pagination = new PaginationResponse(page, size, totalItems, totalPages, hasNext);
+        Map<String, Object> success = new HashMap<>();
+        success.put("pagination", pagination);
+        success.put("data", issues);
+
+        return ResponseEntity.ok(ApiResponse.success(success));
+    }
+
+
 
     // 네이버 뉴스 API로 이슈명에 해당하는 뉴스 조회
     @GetMapping("/{issueName}/news")
@@ -80,74 +90,60 @@ public class IssueController {
         return ResponseEntity.ok(news);
     }
 
+
+    // DB 기반 이슈 검색
     @GetMapping("/search/{keyword}")
     public ResponseEntity<ApiResponse<PagedResponse<IssuePreviewResponse>>> searchIssues(
             @PathVariable String keyword,
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "5") int size
+    ) {
         System.out.println("keyword: " + keyword + ", sort: " + sort + ", page: " + page);
         PagedResponse<IssuePreviewResponse> result = issueService.searchIssues(keyword, sort, page, size);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
 
-    // 북마크를 위한 db저장용?
+    // DB 기반 이슈 상세 조회
     @GetMapping("/{id}/detail")
-    public ResponseEntity<IssueDetailResponse> getIssueDetail(@PathVariable Long id) {
-        Optional<Issue> issueOpt = issueService.findById(id);
-        if (issueOpt.isEmpty()) return ResponseEntity.notFound().build();
-
-        Issue issue = issueOpt.get();
-        List<RawNews> newsList = newsFetchService.fetch(issue.getTitle());
-
-        List<IssueDetailResponse.NewsWithScore> newsWithScores = new ArrayList<>();
-        for (RawNews news : newsList) {
-            int score = llmService.analyzeSentimentScore(news.getTitle(), news.getDescription());
-            newsWithScores.add(new IssueDetailResponse.NewsWithScore(
-                    news.getTitle(),
-                    news.getLink(),
-                    news.getDescription(),
-                    news.getPubDate(),
-                    score
-            ));
+    public ResponseEntity<ApiResponse<IssueDetailResponse>> getIssueDetail(@PathVariable Long id) {
+        try {
+            IssueDetailResponse detail = issueService.getIssueDetail(id);
+            return ResponseEntity.ok(ApiResponse.success(detail));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(ApiResponse.fail(e.getMessage()));
         }
-
-        String category = llmService.classifyCategory(issue.getTitle(), newsList);
-        boolean bookmarked = false;
-
-        IssueDetailResponse response = new IssueDetailResponse(
-                issue.getTitle(), category, newsWithScores, bookmarked
-        );
-
-        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/analyze")
-    public ResponseEntity<IssueDetailResponse> analyzeIssueByQuery(@RequestParam String query) {
-        List<RawNews> newsList = newsFetchService.fetch(query);
 
-        List<IssueDetailResponse.NewsWithScore> newsWithScores = new ArrayList<>();
-        for (RawNews news : newsList) {
-            int score = llmService.analyzeSentimentScore(news.getTitle(), news.getDescription());
-            newsWithScores.add(new IssueDetailResponse.NewsWithScore(
-                    news.getTitle(),
-                    news.getLink(),
-                    news.getDescription(),
-                    news.getPubDate(),
-                    score
-            ));
-        }
 
-        String category = llmService.classifyCategory(query, newsList);
 
-        IssueDetailResponse response = new IssueDetailResponse(
-                query,
-                category,
-                newsWithScores,
-                false // 북마크 여부 (임시)
-        );
-
-        return ResponseEntity.ok(response);
-    }
+//    @GetMapping("/analyze")
+//    public ResponseEntity<IssueDetailResponse> analyzeIssueByQuery(@RequestParam String query) {
+//        List<RawNews> newsList = newsFetchService.fetch(query);
+//
+//        List<IssueDetailResponse.NewsWithScore> newsWithScores = new ArrayList<>();
+//        for (RawNews news : newsList) {
+//            int score = llmService.analyzeSentimentScore(news.getTitle(), news.getDescription());
+//            newsWithScores.add(new IssueDetailResponse.NewsWithScore(
+//                    news.getTitle(),
+//                    news.getLink(),
+//                    news.getDescription(),
+//                    news.getPubDate(),
+//                    score
+//            ));
+//        }
+//
+//        String category = llmService.classifyCategory(query, newsList);
+//
+//        IssueDetailResponse response = new IssueDetailResponse(
+//                query,
+//                category,
+//                newsWithScores,
+//                false // 북마크 여부 (임시)
+//        );
+//
+//        return ResponseEntity.ok(response);
+//    }
 }
