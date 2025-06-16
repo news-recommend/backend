@@ -22,5 +22,8 @@ public interface IssueRepository {
     int countByCategory(String category);
     // 카테고리별 이슈 리스트 코드 추가 끝
 
+    Optional<Issue> findByName(String name);
+
+
 
 }

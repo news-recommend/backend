@@ -63,10 +63,9 @@ public class IssueService {
                 issue.getIssueId(),
                 issue.getIssueName(),
                 issue.getCategory(),
-                null,                      // 감정 점수 제외
-                new ArrayList<>(),         // 뉴스 제외
-                null,                      // 썸네일 미구현
-                false                      // 북마크 미구현
+                null,
+                null,      // 썸네일
+                false      // 북마크
         )).collect(Collectors.toList());
     }
 
@@ -214,4 +213,16 @@ public class IssueService {
                 })
                 .orElse(null);
     }
+
+    public Optional<Issue> findByName(String name) {
+        return issueRepository.findByName(name);
+    }
+
+    public List<String> getIssueTitlesByCategory(String category) {
+        List<Issue> issues = issueRepository.findByCategory(category, 100, 0); // 최대 100개 조회
+        return issues.stream()
+                .map(Issue::getIssueName)
+                .collect(Collectors.toList());
+    }
+
 }

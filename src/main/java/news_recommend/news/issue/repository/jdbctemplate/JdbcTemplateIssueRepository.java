@@ -87,6 +87,13 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
     }
     // 카테고리별 이슈 리스트 코드 추가 끝
 
+    @Override
+    public Optional<Issue> findByName(String name) {
+        String sql = "SELECT * FROM issue WHERE issue_name = ? LIMIT 1";
+        List<Issue> result = jdbcTemplate.query(sql, rowMapper(), name);
+        return result.stream().findAny();
+    }
+
 
     private RowMapper<Issue> rowMapper() {
         return (rs, rowNum) -> {
