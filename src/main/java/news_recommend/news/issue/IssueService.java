@@ -107,17 +107,13 @@ public class IssueService {
         issue.setEmotion(emotionJson);
         issue.setThumbnail(null);
 
-        // ✅ null 처리: 기본값 50
-        List<IssueDetailResponse.NewsWithScore> newsList = enrichedNews.stream()
-                .map(n -> new IssueDetailResponse.NewsWithScore(
-                        n.getTitle(),
-                        n.getLink(),
-                        n.getSentimentScore() != null ? n.getSentimentScore() : 50
-                ))
+        // 피드백 반영: 제목만 뽑아서 콤마로 join
+        List<String> titleList = enrichedNews.stream()
+                .map(RawNews::getTitle)
                 .collect(Collectors.toList());
 
-        String newsJson = newsList.isEmpty() ? "[]" : toJson(newsList);
-        issue.setNewsList(newsJson);
+        String joinedTitles = String.join("|", titleList);  // 안전한 구분자 사용
+        issue.setNewsList(joinedTitles);
 
         Issue saved = issueRepository.save(issue);
 
@@ -201,13 +197,12 @@ public class IssueService {
                 .map(issue -> {
                     List<IssueDetailResponse.NewsWithScore> newsList = new ArrayList<>();
 
-                    try {
-                        if (issue.getNewsList() != null) {
-                            newsList = objectMapper.readValue(issue.getNewsList(),
-                                    new TypeReference<List<IssueDetailResponse.NewsWithScore>>() {});
+                    // ✅ 피드백 반영: 문자열을 split해서 제목 리스트 구성
+                    if (issue.getNewsList() != null && !issue.getNewsList().isBlank()) {
+                        String[] titles = issue.getNewsList().split("\\|");  // 안전한 split
+                        for (String title : titles) {
+                            newsList.add(new IssueDetailResponse.NewsWithScore(title, null, 50));  // link=null, 감정=50
                         }
-                    } catch (Exception e) {
-                        throw new RuntimeException("뉴스 리스트 파싱 실패", e);
                     }
 
                     return new IssueDetailResponse(
