@@ -106,14 +106,23 @@ public class IssueController {
 
 
     // DB 기반 이슈 상세 조회
-    @GetMapping("/{id}/detail")
-    public ResponseEntity<ApiResponse<IssueDetailResponse>> getIssueDetail(@PathVariable Long id) {
-        try {
-            IssueDetailResponse detail = issueService.getIssueDetail(id);
-            return ResponseEntity.ok(ApiResponse.success(detail));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(404).body(ApiResponse.fail(e.getMessage()));
+    @GetMapping("/detail")
+    public ResponseEntity<ApiResponse<IssueDetailResponse>> getIssueDetail(@RequestParam("name") String issueName) {
+        Optional<Issue> optional = issueService.findByName(issueName);
+        if (optional.isEmpty()) {
+            return ResponseEntity.status(404).body(ApiResponse.fail("해당 이슈를 찾을 수 없습니다."));
         }
+
+        IssueDetailResponse detail = issueService.getIssueDetail(optional.get().getIssueId());
+        return ResponseEntity.ok(ApiResponse.success(detail));
+    }
+
+    @GetMapping("/titles")
+    public ResponseEntity<List<String>> getIssueTitles(
+            @RequestParam("category") String category
+    ) {
+        List<String> titles = issueService.getIssueTitlesByCategory(category);
+        return ResponseEntity.ok(titles);
     }
 
 

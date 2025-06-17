@@ -73,4 +73,11 @@ public class NewsFetchService {
     public List<RawNews> fetchNewsByCategory(String category) {
         return fetch(category); // 카테고리를 키워드처럼 사용
     }
+
+    /**
+     * 이슈 상세용: 이슈 이름으로 실시간 뉴스 검색
+     */
+    public List<RawNews> searchByQuery(String query) {
+        return fetch(query); // 내부적으로 동일하게 처리
+    }
 }

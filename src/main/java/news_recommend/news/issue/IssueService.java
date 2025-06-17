@@ -59,20 +59,35 @@ public class IssueService {
         return issueRepository.delete(id);
     }
 
-    // 카테고리별 이슈 리스트 반환 (뉴스 및 감정 점수 제외)
+    // 카테고리별 이슈 리스트 반환 (뉴스 리스트 포함)
     public List<IssuePreviewResponse> getIssuesByCategory(String category, int page, int size) {
         int offset = (page - 1) * size;
         List<Issue> issues = issueRepository.findByCategory(category, size, offset);
 
-        return issues.stream().map(issue -> new IssuePreviewResponse(
-                issue.getIssueId(),
-                issue.getIssueName(),
-                issue.getCategory(),
-                null,                      // 감정 점수 제외
-                new ArrayList<>(),         // 뉴스 제외
-                null,                      // 썸네일 미구현
-                false                      // 북마크 미구현
-        )).collect(Collectors.toList());
+        return issues.stream().map(issue -> {
+            List<String> newsTitles = new ArrayList<>();
+            if (issue.getNewsList() != null && !issue.getNewsList().isBlank()) {
+                try {
+                    List<RawNews> parsedNewsList = objectMapper.readValue(issue.getNewsList(), new TypeReference<List<RawNews>>() {});
+                    newsTitles = parsedNewsList.stream()
+                            .map(RawNews::getTitle)
+                            .collect(Collectors.toList());
+                } catch (Exception e) {
+                    System.err.println("뉴스 파싱 실패: " + e.getMessage());
+                    newsTitles = List.of("뉴스 제목 파싱 오류");
+                }
+            }
+
+            return new IssuePreviewResponse(
+                    issue.getIssueId(),
+                    issue.getIssueName(),
+                    issue.getCategory(),
+                    null,       // sentimentTrend
+                    null,       // thumbnail
+                    false,      // isBookmarked
+                    newsTitles  // ✅ title만 추출한 뉴스 리스트
+            );
+        }).collect(Collectors.toList());
     }
 
     public int getTotalIssuesByCategory(String category) {
@@ -108,17 +123,13 @@ public class IssueService {
         issue.setEmotion(emotionJson);
         issue.setThumbnail(null);
 
-        // ✅ null 처리: 기본값 50
-        List<IssueDetailResponse.NewsWithScore> newsList = enrichedNews.stream()
-                .map(n -> new IssueDetailResponse.NewsWithScore(
-                        n.getTitle(),
-                        n.getLink(),
-                        n.getSentimentScore() != null ? n.getSentimentScore() : 50
-                ))
+        // 피드백 반영: 제목만 뽑아서 콤마로 join
+        List<String> titleList = enrichedNews.stream()
+                .map(RawNews::getTitle)
                 .collect(Collectors.toList());
 
-        String newsJson = newsList.isEmpty() ? "[]" : toJson(newsList);
-        issue.setNewsList(newsJson);
+        String joinedTitles = String.join("|", titleList);  // 안전한 구분자 사용
+        issue.setNewsList(joinedTitles);
 
         Issue saved = issueRepository.save(issue);
 
@@ -196,29 +207,53 @@ public class IssueService {
     }
 
 
-    // 상세 조회 기능 추가
+    // 상세 조회 기능 (피드백 반영: 실시간 뉴스 API 호출)
     public IssueDetailResponse getIssueDetail(Long id) {
         return issueRepository.findById(id)
                 .map(issue -> {
                     List<IssueDetailResponse.NewsWithScore> newsList = new ArrayList<>();
 
                     try {
-                        if (issue.getNewsList() != null) {
-                            newsList = objectMapper.readValue(issue.getNewsList(),
-                                    new TypeReference<List<IssueDetailResponse.NewsWithScore>>() {});
-                        }
+                        // ✅ 실시간 뉴스 수집 (이슈 이름으로 검색)
+                        List<RawNews> fetched = newsFetchService.searchByQuery(issue.getIssueName());
+
+                        // 각 뉴스에 대해 실시간 감정 분석 적용
+                        newsList = fetched.stream()
+                                .map(news -> {
+                                    int score = llmService.analyzeSentimentScore(news.getTitle(), news.getDescription());
+                                    return new IssueDetailResponse.NewsWithScore(
+                                            news.getTitle(),
+                                            news.getLink(),
+                                            news.getDescription(),
+                                            news.getPubDate(),
+                                            score
+                                    );
+                                })
+                                .collect(Collectors.toList());
+
                     } catch (Exception e) {
-                        throw new RuntimeException("뉴스 리스트 파싱 실패", e);
+                        System.err.println("뉴스 API 호출 실패: " + e.getMessage());
                     }
 
                     return new IssueDetailResponse(
                             issue.getIssueName(),
                             issue.getCategory(),
                             newsList,
-                            false // 북마크 여부는 미구현
+                            false // 북마크 여부는 아직 미구현
                     );
                 })
                 .orElse(null);
+    }
+
+    public Optional<Issue> findByName(String name) {
+        return issueRepository.findByName(name);
+    }
+
+    public List<String> getIssueTitlesByCategory(String category) {
+        List<Issue> issues = issueRepository.findByCategory(category, 100, 0); // 최대 100개 조회
+        return issues.stream()
+                .map(Issue::getIssueName)
+                .collect(Collectors.toList());
     }
 
     public PagedResponse<IssuePreviewResponse> searchIssues(String keyword, String sort, int page, int size) {
@@ -229,7 +264,6 @@ public class IssueService {
             System.out.println("ID: " + res.getIssueId());
             System.out.println("Name: " + res.getIssueName());
             System.out.println("Category: " + res.getCategory());
-            System.out.println("News List: " + String.join(", ", res.getNewsList()));
             System.out.println("Bookmarked: " + res.isBookmarked());
             System.out.println("----------");
         }
@@ -241,6 +275,7 @@ public class IssueService {
 
         return new PagedResponse<>(pagination, issues);
     }
+
 
 }
 

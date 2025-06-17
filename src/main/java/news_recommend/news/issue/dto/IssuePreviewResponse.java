@@ -3,26 +3,26 @@ package news_recommend.news.issue.dto;
 import java.util.List;
 
 public class IssuePreviewResponse {
+
     private Long issueId;
     private String issueName;
     private String category;
-
     private List<Integer> sentimentTrend;
-    private List<RawNews> newsList;
     private String thumbnail;
     private boolean isBookmarked;
+    private List<String> newsList;
 
-    // ✅ 통합 생성자
     public IssuePreviewResponse(Long issueId, String issueName, String category,
-                                 List<Integer> sentimentTrend, List<RawNews> newsList,
-                                 String thumbnail, boolean isBookmarked) {
+                                List<Integer> sentimentTrend,
+                                String thumbnail, boolean isBookmarked,
+                                List<String> newsList) {
         this.issueId = issueId;
         this.issueName = issueName;
         this.category = category;
         this.sentimentTrend = sentimentTrend;
-        this.newsList = newsList;
         this.thumbnail = thumbnail;
         this.isBookmarked = isBookmarked;
+        this.newsList = newsList;
     }
 
     public Long getIssueId() {
@@ -37,13 +37,8 @@ public class IssuePreviewResponse {
         return category;
     }
 
-
     public List<Integer> getSentimentTrend() {
         return sentimentTrend;
-    }
-
-    public List<RawNews> getNewsList() {
-        return newsList;
     }
 
     public String getThumbnail() {
@@ -52,5 +47,9 @@ public class IssuePreviewResponse {
 
     public boolean isBookmarked() {
         return isBookmarked;
+    }
+
+    public List<String> getNewsList() {
+        return newsList;
     }
 }

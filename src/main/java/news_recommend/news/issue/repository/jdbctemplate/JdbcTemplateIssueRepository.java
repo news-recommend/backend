@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -89,6 +90,13 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
     }
     // 카테고리별 이슈 리스트 코드 추가 끝
 
+    @Override
+    public Optional<Issue> findByName(String name) {
+        String sql = "SELECT * FROM issue WHERE issue_name = ? LIMIT 1";
+        List<Issue> result = jdbcTemplate.query(sql, rowMapper(), name);
+        return result.stream().findAny();
+    }
+
 
     private RowMapper<Issue> rowMapper() {
         return (rs, rowNum) -> {
@@ -128,8 +136,10 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
                 rs.getLong("issue_id"),
                 rs.getString("issue_name"),
                 rs.getString("category"),
-                parseNewsList(rs.getString("news_list")),
-                false // isBookmarked 처리 필요 시 사용자 정보 추가
+                new ArrayList<Integer>(),  // sentimentTrend
+                null,                      // thumbnail
+                false,                     // isBookmarked
+                new ArrayList<String>()   // newsList (빈 리스트 전달)
         ), "%" + keyword + "%", limit, offset);
     }
 
