@@ -191,25 +191,39 @@ public class IssueService {
     }
 
 
-    // 상세 조회 기능 추가
+    // 상세 조회 기능 (피드백 반영: 실시간 뉴스 API 호출)
     public IssueDetailResponse getIssueDetail(Long id) {
         return issueRepository.findById(id)
                 .map(issue -> {
                     List<IssueDetailResponse.NewsWithScore> newsList = new ArrayList<>();
 
-                    // ✅ 피드백 반영: 문자열을 split해서 제목 리스트 구성
-                    if (issue.getNewsList() != null && !issue.getNewsList().isBlank()) {
-                        String[] titles = issue.getNewsList().split("\\|");  // 안전한 split
-                        for (String title : titles) {
-                            newsList.add(new IssueDetailResponse.NewsWithScore(title, null, 50));  // link=null, 감정=50
-                        }
+                    try {
+                        // ✅ 실시간 뉴스 수집 (이슈 이름으로 검색)
+                        List<RawNews> fetched = newsFetchService.searchByQuery(issue.getIssueName());
+
+                        // 각 뉴스에 대해 실시간 감정 분석 적용
+                        newsList = fetched.stream()
+                                .map(news -> {
+                                    int score = llmService.analyzeSentimentScore(news.getTitle(), news.getDescription());
+                                    return new IssueDetailResponse.NewsWithScore(
+                                            news.getTitle(),
+                                            news.getLink(),
+                                            news.getDescription(),
+                                            news.getPubDate(),
+                                            score
+                                    );
+                                })
+                                .collect(Collectors.toList());
+
+                    } catch (Exception e) {
+                        System.err.println("뉴스 API 호출 실패: " + e.getMessage());
                     }
 
                     return new IssueDetailResponse(
                             issue.getIssueName(),
                             issue.getCategory(),
                             newsList,
-                            false // 북마크 여부는 미구현
+                            false // 북마크 여부는 아직 미구현
                     );
                 })
                 .orElse(null);
