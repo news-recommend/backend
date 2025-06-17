@@ -10,16 +10,19 @@ public class IssuePreviewResponse {
     private List<Integer> sentimentTrend;
     private String thumbnail;
     private boolean isBookmarked;
+    private List<String> newsList;
 
     public IssuePreviewResponse(Long issueId, String issueName, String category,
                                 List<Integer> sentimentTrend,
-                                String thumbnail, boolean isBookmarked) {
+                                String thumbnail, boolean isBookmarked,
+                                List<String> newsList) {
         this.issueId = issueId;
         this.issueName = issueName;
         this.category = category;
         this.sentimentTrend = sentimentTrend;
         this.thumbnail = thumbnail;
         this.isBookmarked = isBookmarked;
+        this.newsList = newsList;
     }
 
     public Long getIssueId() {
@@ -44,5 +47,9 @@ public class IssuePreviewResponse {
 
     public boolean isBookmarked() {
         return isBookmarked;
+    }
+
+    public List<String> getNewsList() {
+        return newsList;
     }
 }

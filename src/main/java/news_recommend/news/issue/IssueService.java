@@ -59,19 +59,35 @@ public class IssueService {
         return issueRepository.delete(id);
     }
 
-    // 카테고리별 이슈 리스트 반환 (뉴스 및 감정 점수 제외)
+    // 카테고리별 이슈 리스트 반환 (뉴스 리스트 포함)
     public List<IssuePreviewResponse> getIssuesByCategory(String category, int page, int size) {
         int offset = (page - 1) * size;
         List<Issue> issues = issueRepository.findByCategory(category, size, offset);
 
-        return issues.stream().map(issue -> new IssuePreviewResponse(
-                issue.getIssueId(),
-                issue.getIssueName(),
-                issue.getCategory(),
-                null,
-                null,      // 썸네일
-                false      // 북마크
-        )).collect(Collectors.toList());
+        return issues.stream().map(issue -> {
+            List<String> newsTitles = new ArrayList<>();
+            if (issue.getNewsList() != null && !issue.getNewsList().isBlank()) {
+                try {
+                    List<RawNews> parsedNewsList = objectMapper.readValue(issue.getNewsList(), new TypeReference<List<RawNews>>() {});
+                    newsTitles = parsedNewsList.stream()
+                            .map(RawNews::getTitle)
+                            .collect(Collectors.toList());
+                } catch (Exception e) {
+                    System.err.println("뉴스 파싱 실패: " + e.getMessage());
+                    newsTitles = List.of("뉴스 제목 파싱 오류");
+                }
+            }
+
+            return new IssuePreviewResponse(
+                    issue.getIssueId(),
+                    issue.getIssueName(),
+                    issue.getCategory(),
+                    null,       // sentimentTrend
+                    null,       // thumbnail
+                    false,      // isBookmarked
+                    newsTitles  // ✅ title만 추출한 뉴스 리스트
+            );
+        }).collect(Collectors.toList());
     }
 
     public int getTotalIssuesByCategory(String category) {

@@ -136,9 +136,10 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
                 rs.getLong("issue_id"),
                 rs.getString("issue_name"),
                 rs.getString("category"),
-                new ArrayList<>(), // sentimentTrend: 현재 DB에 없으면 빈 리스트로 처리
-                null,  // thumbnail
-                false // isBookmarked 처리 필요 시 사용자 정보 추가
+                new ArrayList<Integer>(),  // sentimentTrend
+                null,                      // thumbnail
+                false,                     // isBookmarked
+                new ArrayList<String>()   // newsList (빈 리스트 전달)
         ), "%" + keyword + "%", limit, offset);
     }
 
