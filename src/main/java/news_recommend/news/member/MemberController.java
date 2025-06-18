@@ -97,7 +97,7 @@ public class MemberController {
                     .secure(true)
                     .sameSite("None")
                     .path("/")
-                    .domain("newrecommend.shop")
+                    
                     .build();
 
             // userId, accessToke 정보를 응답에 포함
