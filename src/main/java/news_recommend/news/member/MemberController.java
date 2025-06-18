@@ -93,10 +93,10 @@ public class MemberController {
             // HttpOnly 쿠키 설정
             ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(true)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
+                    .sameSite("None")
                     .build();
 
             // userId, accessToke 정보를 응답에 포함

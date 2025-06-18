@@ -45,11 +45,13 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
 
     @Override  // 비밀번호 추가
     public Member save(Member member) {
-        String sql = "INSERT INTO member (name, email, interest_category, password) VALUES (?, ?, ?, ?) RETURNING user_id";
+        String sql = "INSERT INTO member (name, email, interest_category,  agegroup, gender, password) VALUES (?, ?, ?, ?, ?, ?) RETURNING user_id";
         Long userId = jdbcTemplate.queryForObject(sql, new Object[]{
                 member.getName(),
                 member.getEmail(),
                 member.getInterestCategory(),
+                member.getAgeGroup(),
+                member.getGender(),
                 member.getPassword()
         }, Long.class);
 
