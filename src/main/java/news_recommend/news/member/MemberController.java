@@ -38,7 +38,8 @@ public class MemberController {
             if (request.getPreferredTags() == null) {
                 request.setPreferredTags(List.of());
             }
-
+            System.out.println("ageGroup = " + request.getAgeGroup());
+            System.out.println("gender = " + request.getGender());
             memberService.signup(request);
 
             Map<String, Object> result = new HashMap<>();
@@ -95,10 +96,10 @@ public class MemberController {
                     .httpOnly(true)
                     .secure(true)
                     .path("/")
+                    .domain("https://news-recommend.vercel.app")
                     .maxAge(7 * 24 * 60 * 60)
                     .sameSite("None")
                     .build();
-
             // userId, accessToke 정보를 응답에 포함
             Map<String, Object> result = new HashMap<>();
             result.put("userId", tokens.get("userId"));

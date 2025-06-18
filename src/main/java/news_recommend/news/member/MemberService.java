@@ -132,7 +132,8 @@ public class MemberService {
         if (existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
         }
-
+        System.out.println("ageGroup = " + request.getAgeGroup());
+        System.out.println("gender = " + request.getGender());
         List<String> tags = request.getPreferredTags();
         String joinedTags = (tags == null || tags.isEmpty())
                 ? ""
