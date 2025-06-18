@@ -68,10 +68,8 @@ public class IssueService {
             List<String> newsTitles = new ArrayList<>();
             if (issue.getNewsList() != null && !issue.getNewsList().isBlank()) {
                 try {
-                    List<RawNews> parsedNewsList = objectMapper.readValue(issue.getNewsList(), new TypeReference<List<RawNews>>() {});
-                    newsTitles = parsedNewsList.stream()
-                            .map(RawNews::getTitle)
-                            .collect(Collectors.toList());
+                   newsTitles = objectMapper.readValue(issue.getNewsList(), new TypeReference<List<String>>() {});
+                    
                 } catch (Exception e) {
                     System.err.println("뉴스 파싱 실패: " + e.getMessage());
                     newsTitles = List.of("뉴스 제목 파싱 오류");
@@ -133,9 +131,6 @@ public class IssueService {
 
         Issue saved = issueRepository.save(issue);
 
-        for (RawNews news : enrichedNews) {
-            newsRepository.save(news, saved.getIssueId());
-        }
     }
 
     // 감정 추세 분석
@@ -173,7 +168,7 @@ public class IssueService {
     }
 
     // 스케줄러: 매일 3시 실행 - 감정 분석 없이 이슈만 저장
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 22 4 * * *", zone = "Asia/Seoul")
     public void updateDailyIssues() {
         List<String> categories = List.of(
                 "정치",
@@ -192,7 +187,7 @@ public class IssueService {
                 "스포츠",
                 "생활/건강"
         );
-
+        System.out.println("스케줄러 실행");
         for (String category : categories) {
             List<RawNews> newsList = newsFetchService.fetch(category);   // category 키워드 기반 수집
             if (newsList.isEmpty()) continue;
