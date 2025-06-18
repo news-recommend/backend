@@ -95,11 +95,11 @@ public class MemberController {
             ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(true)
-                    .path("/")
-                    .domain("https://news-recommend.vercel.app")
-                    .maxAge(7 * 24 * 60 * 60)
                     .sameSite("None")
+                    .path("/")
+                    .domain("newrecommend.shop")
                     .build();
+
             // userId, accessToke 정보를 응답에 포함
             Map<String, Object> result = new HashMap<>();
             result.put("userId", tokens.get("userId"));
