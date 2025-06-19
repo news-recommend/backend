@@ -68,7 +68,7 @@ public class IssueService {
             List<String> newsTitles = new ArrayList<>();
             if (issue.getNewsList() != null && !issue.getNewsList().isBlank()) {
                 try {
-                   newsTitles = objectMapper.readValue(issue.getNewsList(), new TypeReference<List<String>>() {});
+                   newsTitles = Collections.singletonList(issue.getNewsList());
                     
                 } catch (Exception e) {
                     System.err.println("뉴스 파싱 실패: " + e.getMessage());
@@ -167,7 +167,7 @@ public class IssueService {
         }
     }
 
-    // 스케줄러: 매일 3시 실행 - 감정 분석 없이 이슈만 저장
+    // 스케줄러: 매일 4시 22분 실행 - 감정 분석 없이 이슈만 저장
     @Scheduled(cron = "0 22 4 * * *", zone = "Asia/Seoul")
     public void updateDailyIssues() {
         List<String> categories = List.of(
