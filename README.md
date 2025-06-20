@@ -45,4 +45,7 @@
 ---
 
 > 이 프로젝트는 이슈 별 뉴스를 제공하기 위해 개발되었습니다.
+> Notion: [Notion](https://deluxe-bougon-906.notion.site/1e46238d0c1e801ba5dac455e5bd4a69?pvs=74)
+> Figma: [Figma 주소](https://www.figma.com/design/iPoaggg7seTt5STcylTnPl/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8?node-id=0-1&t=MwaMTJlK2cO697Mh-1)
+> 배포 URL: [배포 주소](https://www.figma.com/design/iPoaggg7seTt5STcylTnPl/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8?node-id=0-1&t=MwaMTJlK2cO697Mh-1)
 
