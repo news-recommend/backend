@@ -113,21 +113,23 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
     }
 
     public List<IssuePreviewResponse> findByKeywordAndSort(String keyword, String sort, int limit, int offset) {
-        String orderBy = switch (sort) {
-            case "popular" -> " bookmark_count DESC";
-            case "latest" -> " created_at DESC";
-            default -> " created_at DESC";
-        };
+        boolean isPopular = "popular".equals(sort);
+
+        String orderBy = isPopular
+                ? "bookmark_count DESC"
+                : "i.created_at DESC";
 
         String sql = """
-            SELECT i.issue_id, i.issue_name, i.category, i.news_list
-            FROM issue i
-            WHERE LOWER(i.issue_name) LIKE ?
-            ORDER BY """ + orderBy + """
-            LIMIT ? OFFSET ?
-        """;
+        SELECT i.issue_id, i.issue_name, i.category, i.news_list
+        """ + (isPopular ? ", COUNT(im.issue_id) AS bookmark_count " : "") + """
+        FROM issue i
+        """ + (isPopular ? "LEFT JOIN issue_user im ON i.issue_id = im.issue_id " : "") + """
+        WHERE LOWER(i.issue_name) LIKE ?
+        """ + (isPopular ? "GROUP BY i.issue_id, i.issue_name, i.category, i.news_list " : "") + """
+        ORDER BY """ + " " + orderBy + """
+        LIMIT ? OFFSET ?
+    """;
 
-        // 디버깅용 로깅
         System.out.println("SQL: " + sql);
         System.out.println("Keyword: %" + keyword + "%");
         System.out.println("Limit: " + limit + ", Offset: " + offset);
@@ -136,12 +138,13 @@ public class JdbcTemplateIssueRepository implements IssueRepository {
                 rs.getLong("issue_id"),
                 rs.getString("issue_name"),
                 rs.getString("category"),
-                new ArrayList<Integer>(),  // sentimentTrend
-                null,                      // thumbnail
-                false,                     // isBookmarked
-                new ArrayList<String>()   // newsList (빈 리스트 전달)
-        ), "%" + keyword + "%", limit, offset);
+                new ArrayList<>(),     // sentimentTrend
+                null,                  // thumbnail
+                false,                 // isBookmarked
+                new ArrayList<>()      // newsList (빈 리스트 전달)
+        ), "%" + keyword.toLowerCase() + "%", limit, offset);
     }
+
 
     public int countByKeyword(String keyword) {
         String sql = "SELECT COUNT(*) FROM issue WHERE issue_name LIKE ?";
